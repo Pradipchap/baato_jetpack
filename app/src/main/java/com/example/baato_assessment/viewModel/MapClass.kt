@@ -18,6 +18,7 @@ import org.maplibre.android.location.modes.RenderMode
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import com.google.android.gms.location.LocationServices
+import org.maplibre.android.location.engine.LocationEngineRequest
 
 //use this class to manage map from anywhere in the app
 class MapManager(private val context: Context) {
@@ -33,8 +34,31 @@ class MapManager(private val context: Context) {
             this.map = mapLibreMap
             mapLibreMap.setStyle("https://api.baato.io/api/v1/styles/breeze_cdn?key=bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ") {
                 Log.d("MapManager", "Map style loaded successfully")
+                enableUserLocation()
                 onMapReady(mapLibreMap)
             }
+        }
+    }
+
+    private fun enableUserLocation() {
+        if (map == null) return
+
+        if (checkLocationPermissions()) {
+            val locationComponent = map!!.locationComponent
+            locationComponent.activateLocationComponent(
+                LocationComponentActivationOptions.builder(context, map!!.style!!)
+                    .useDefaultLocationEngine(true)
+                    //right now using default location engine
+                    //TODO create own location engine
+                    .locationEngineRequest(LocationEngineRequest.Builder(750).setFastestInterval(750).setPriority(
+                        LocationEngineRequest.PRIORITY_HIGH_ACCURACY).build())
+                    .build()
+            )
+            locationComponent.isLocationComponentEnabled = true
+            locationComponent.cameraMode = CameraMode.TRACKING
+            locationComponent.renderMode = RenderMode.COMPASS
+        } else {
+            requestLocationPermissions()
         }
     }
 
@@ -61,9 +85,9 @@ class MapManager(private val context: Context) {
             1001
         )
     }
-
     fun initializeLocationEngine() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        requestLocationUpdates()
     }
 
     fun goToUserLocation() {
@@ -84,32 +108,32 @@ class MapManager(private val context: Context) {
         }
     }
 
-
+    //if time I will implement my own location engine for location updates
     fun requestLocationUpdates() {
-        // Check if location permissions are granted
         if (checkLocationPermissions()) {
             try {
-                // Request location updates
-                fusedLocationClient?.lastLocation?.addOnSuccessListener { location ->
-                    if (location != null) {
-                        // Use the location
-                        val latLng = LatLng(location.latitude, location.longitude)
-                        moveCamera(latLng, 18.0)
-                    } else {
-                        Log.e("MapManager", "Last known location is null")
-                        Toast.makeText(context, "Unable to get current location.", Toast.LENGTH_SHORT).show()
+                val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+                    com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                    5000
+                ).apply {
+                    setMinUpdateIntervalMillis(2000)
+                    setWaitForAccurateLocation(true)
+                }.build()
+
+                val locationCallback = object : com.google.android.gms.location.LocationCallback() {
+                    override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+                        locationResult.lastLocation?.let { location ->
+                            val latLng = LatLng(location.latitude, location.longitude)
+                            moveCamera(latLng, 18.0)
+                        }
                     }
-                }?.addOnFailureListener { exception ->
-                    Log.e("MapManager", "Failed to get location: ${exception.message}")
-                    Toast.makeText(context, "Failed to get location.", Toast.LENGTH_SHORT).show()
                 }
-            } catch (securityException: SecurityException) {
-                // Handle the case where the permission is denied
-                Log.e("MapManager", "SecurityException: ${securityException.message}")
-                Toast.makeText(context, "Location permission denied.", Toast.LENGTH_SHORT).show()
+
+                fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, null)
+            } catch (e: SecurityException) {
+                Log.e("MapManager", "Location permission denied: ${e.message}")
             }
         } else {
-            // Request location permissions if not granted
             requestLocationPermissions()
         }
     }
