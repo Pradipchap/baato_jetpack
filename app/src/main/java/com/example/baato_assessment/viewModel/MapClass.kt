@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -32,6 +33,9 @@ class MapManager(private val context: Context) {
         this.mapView = mapView
         mapView.getMapAsync { mapLibreMap ->
             this.map = mapLibreMap
+            mapLibreMap.uiSettings.isCompassEnabled = false
+            mapLibreMap.uiSettings.setCompassFadeFacingNorth(false)
+            mapLibreMap.uiSettings.compassGravity = Gravity.START
             mapLibreMap.setStyle("https://api.baato.io/api/v1/styles/breeze_cdn?key=bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ") {
                 Log.d("MapManager", "Map style loaded successfully")
                 enableUserLocation()
@@ -136,6 +140,10 @@ class MapManager(private val context: Context) {
         } else {
             requestLocationPermissions()
         }
+    }
+
+    fun resetCompass() {
+        map?.animateCamera(CameraUpdateFactory.bearingTo(0.0))
     }
 
     fun onDestroy() {

@@ -12,6 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.baato_assessment.viewModel.MapManager
+import com.example.baato_assessment.views.actionButtons.CustomCompass
+import com.example.baato_assessment.views.actionButtons.FloatingButtons
 import com.example.baato_assessment.views.icons.My_location
 import org.maplibre.android.maps.MapView
 
@@ -37,14 +39,6 @@ fun MapScreen() {
             },
             modifier = Modifier.fillMaxSize()
         )
-
-        FloatingActionButton(
-            onClick = { mapManager.goToUserLocation() },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Image(My_location, contentDescription = "")
-        }
+        FloatingButtons(mapManager)
     }
 }
