@@ -15,12 +15,12 @@ import com.example.baato_assessment.viewModel.MapManager
 import com.example.baato_assessment.views.actionButtons.CustomCompass
 import com.example.baato_assessment.views.actionButtons.FloatingButtons
 import com.example.baato_assessment.views.icons.My_location
+import com.example.baato_assessment.views.popups.CustomBottomSheet
 import org.maplibre.android.maps.MapView
 
 @Composable
 fun MapScreen() {
     val context = LocalContext.current
-    val mapManager = remember { MapManager(context) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
@@ -30,15 +30,17 @@ fun MapScreen() {
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    mapManager.initializeMap(this) { }
-                    mapManager.initializeLocationEngine()
+                    MapManager.initializeMap(this) { }
+                    MapManager.initializeLocationEngine()
 
                     //after initialization go to current user location and zoom in
-                    mapManager.goToUserLocation()
+                    MapManager.goToUserLocation()
+
                 }
             },
             modifier = Modifier.fillMaxSize()
         )
-        FloatingButtons(mapManager)
+        FloatingButtons()
+        CustomBottomSheet()
     }
 }

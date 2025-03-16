@@ -10,21 +10,22 @@ import com.example.baato_assessment.views.icons.My_location
 
 @Composable
 fun FloatingButtons(
-    mapManager: MapManager,
 ) {
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomEnd
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp), // Add spacing between buttons
-            horizontalAlignment = Alignment.End // Ensure buttons align to the right
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.End
         ) {
-            CustomCompass(mapManager) //Assuming custom compass is a composable
+            ShareLocationButton()
+            CustomCompass()
             FloatingActionButton(
                 icon = My_location,
-                onClick = { mapManager.goToUserLocation() }
+                onClick = { MapManager.goToUserLocation() }
             )
         }
     }

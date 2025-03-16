@@ -31,6 +31,8 @@ class MainActivity : ComponentActivity() {
         MapLibre.getInstance(this, "bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ",
             WellKnownTileServer.MapLibre)
 
+        MapManager.initialize(this)
+
         try {
             setContent {
                 BaatoassessmentTheme {

@@ -9,7 +9,6 @@ import com.example.baato_assessment.viewModel.MapManager
 
 @Composable
 fun CustomCompass(
-    mapManager: MapManager,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -19,6 +18,6 @@ fun CustomCompass(
     LaunchedEffect(Unit) { compassManager.startListening { angle -> rotationAngle.value = angle } }
 
 
-    FloatingActionButton(R.drawable.compass,{ mapManager.resetCompass() })
+    FloatingActionButton(R.drawable.compass,{ MapManager.resetCompass() })
 
 }

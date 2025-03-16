@@ -22,12 +22,17 @@ import com.google.android.gms.location.LocationServices
 import org.maplibre.android.location.engine.LocationEngineRequest
 
 //use this class to manage map from anywhere in the app
-class MapManager(private val context: Context) {
+object MapManager {
 
+    private var appContext: Context? = null // Context should be set upon initialization.
     private var mapView: MapView? = null
     private var map: MapLibreMap? = null
     private var fusedLocationClient: FusedLocationProviderClient? = null
 
+    fun initialize(applicationContext: Context) { // Accept ApplicationContext
+        this.appContext = applicationContext
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
+    }
 
     fun initializeMap(mapView: MapView, onMapReady: (MapLibreMap) -> Unit) {
         this.mapView = mapView
@@ -45,24 +50,26 @@ class MapManager(private val context: Context) {
     }
 
     private fun enableUserLocation() {
-        if (map == null) return
+        appContext?.let{
+            if (map == null) return
 
-        if (checkLocationPermissions()) {
-            val locationComponent = map!!.locationComponent
-            locationComponent.activateLocationComponent(
-                LocationComponentActivationOptions.builder(context, map!!.style!!)
-                    .useDefaultLocationEngine(true)
-                    //right now using default location engine
-                    //TODO create own location engine
-                    .locationEngineRequest(LocationEngineRequest.Builder(750).setFastestInterval(750).setPriority(
-                        LocationEngineRequest.PRIORITY_HIGH_ACCURACY).build())
-                    .build()
-            )
-            locationComponent.isLocationComponentEnabled = true
-            locationComponent.cameraMode = CameraMode.TRACKING
-            locationComponent.renderMode = RenderMode.COMPASS
-        } else {
-            requestLocationPermissions()
+            if (checkLocationPermissions()) {
+                val locationComponent = map!!.locationComponent
+                locationComponent.activateLocationComponent(
+                    LocationComponentActivationOptions.builder(it, map!!.style!!)
+                        .useDefaultLocationEngine(true)
+                        //right now using default location engine
+                        //TODO create own location engine
+                        .locationEngineRequest(LocationEngineRequest.Builder(750).setFastestInterval(750).setPriority(
+                            LocationEngineRequest.PRIORITY_HIGH_ACCURACY).build())
+                        .build()
+                )
+                locationComponent.isLocationComponentEnabled = true
+                locationComponent.cameraMode = CameraMode.TRACKING
+                locationComponent.renderMode = RenderMode.COMPASS
+            } else {
+                requestLocationPermissions()
+            }
         }
     }
 
@@ -76,39 +83,47 @@ class MapManager(private val context: Context) {
     }
 
     private fun checkLocationPermissions(): Boolean {
-        return ActivityCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        return appContext?.let{
+            ActivityCompat.checkSelfPermission(
+                it,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        }?:false
     }
 
     private fun requestLocationPermissions() {
-        ActivityCompat.requestPermissions(
-            (context as Activity),
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            1001
-        )
+        appContext?.let{
+            ActivityCompat.requestPermissions(
+                (it as Activity),
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                1001
+            )
+        }
     }
     fun initializeLocationEngine() {
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        appContext?.let{
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(it)
+        }
         requestLocationUpdates()
     }
 
     fun goToUserLocation() {
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient?.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null)
-                ?.addOnSuccessListener { location ->
-                    if (location != null) {
-                        val latLng = LatLng(location.latitude, location.longitude)
-                        moveCamera(latLng, 18.0)
-                    } else {
-                        Toast.makeText(context, "Unable to get current location.", Toast.LENGTH_SHORT).show()
+        appContext?.let{
+            if (ActivityCompat.checkSelfPermission(it, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                fusedLocationClient?.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null)
+                    ?.addOnSuccessListener { location ->
+                        if (location != null) {
+                            val latLng = LatLng(location.latitude, location.longitude)
+                            moveCamera(latLng, 18.0)
+                        } else {
+                            Toast.makeText(it, "Unable to get current location.", Toast.LENGTH_SHORT).show()
+                        }
+                    }?.addOnFailureListener {
+                        Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT).show()
                     }
-                }?.addOnFailureListener {
-                    Toast.makeText(context, "Failed to get location.", Toast.LENGTH_SHORT).show()
-                }
-        } else {
-            requestLocationPermissions()
+            } else {
+                requestLocationPermissions()
+            }
         }
     }
 
