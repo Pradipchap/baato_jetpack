@@ -2,6 +2,7 @@ package com.example.baato_assessment.views.actionButtons
 
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import com.example.baato_assessment.R
 import com.example.baato_assessment.viewModel.CompassManager
@@ -18,6 +19,7 @@ fun CustomCompass(
     LaunchedEffect(Unit) { compassManager.startListening { angle -> rotationAngle.value = angle } }
 
 
-    FloatingActionButton(R.drawable.compass,{ MapManager.resetCompass() })
+    FloatingActionButton(R.drawable.compass,{ MapManager.resetCompass() },"", Modifier.rotate(rotationAngle.value)
+    )
 
 }
