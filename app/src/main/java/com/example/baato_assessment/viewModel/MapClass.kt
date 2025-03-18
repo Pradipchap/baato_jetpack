@@ -259,7 +259,7 @@ object MapManager {
         }
     }
 
-    fun fetchPlacesInCurrentViewport() {
+    fun fetchPlacesInCurrentViewport(type: String) {
         map?.let { mapLibreMap ->
             val visibleRegion = mapLibreMap.projection.visibleRegion
             val latLngBounds = visibleRegion.latLngBounds
@@ -272,7 +272,8 @@ object MapManager {
                     val places = getNearbyPlaces(
                         lat = (southWest.latitude + northEast.latitude) / 2,
                         lon = (southWest.longitude + northEast.longitude) / 2,
-                        radius = calculateRadius(southWest, northEast)
+                        radius = calculateRadius(southWest, northEast),
+                        type = type
                     )
 
                     places.data.forEach { place ->
@@ -359,7 +360,7 @@ object MapManager {
         }
     }
 
-    private fun clearMapFeatures() {
+    fun clearMapFeatures() {
         map?.let { mapLibreMap ->
             mapLibreMap.getStyle()?.sources?.forEach { source ->
                 if (source.id.startsWith("source-") || source.id.startsWith("polygon-source-")) {

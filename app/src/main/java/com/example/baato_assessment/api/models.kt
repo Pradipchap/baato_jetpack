@@ -30,3 +30,5 @@ data class Geometry(
     val type: String,
     val coordinates: Any?
 )
+
+data class Category(val label: String, val value: String)

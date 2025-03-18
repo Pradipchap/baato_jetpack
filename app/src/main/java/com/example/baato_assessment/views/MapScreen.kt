@@ -10,12 +10,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.example.baato_assessment.viewModel.DeepLinkHandler
 import com.example.baato_assessment.viewModel.MapManager
 import com.example.baato_assessment.views.actionButtons.FloatingButtons
+import com.example.baato_assessment.views.popups.CategorySelectorPreview
 import com.example.baato_assessment.views.popups.CustomBottomSheet
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 
 @Composable
 fun MapScreen(onMapReady: (MapLibreMap) -> Unit) {
+    CategorySelectorPreview()
 
     Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(

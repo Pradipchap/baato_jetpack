@@ -6,6 +6,7 @@ import kotlinx.coroutines.withContext
 suspend fun getNearbyPlaces(
     lat: Double,
     lon: Double,
+    type:String? = null,
     radius: Int? = null,
     limit: Int? = null,
     sortBy: Boolean? = null,
@@ -16,6 +17,7 @@ suspend fun getNearbyPlaces(
         queryParams["key"] = "bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ"
         queryParams["lat"] = lat.toString()
         queryParams["lon"] = lon.toString()
+        type?.let { queryParams["type"] = it }
 
 
         val response = ApiClient.baatoAPI.getNearbyPlaces(queryParams)
