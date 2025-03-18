@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -20,18 +21,27 @@ import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import com.google.android.gms.location.LocationServices
 import org.maplibre.android.location.engine.LocationEngineRequest
+import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.FeatureCollection
+import org.maplibre.geojson.Point
+import org.maplibre.android.style.layers.PropertyFactory.*
+import com.pradipchapagain.baato_assessment.R
+
 
 //use this class to manage map from anywhere in the app
 object MapManager {
 
-    private var appContext: Context? = null // Context should be set upon initialization.
+    private var appContext: Context? = null
     private var mapView: MapView? = null
     private var map: MapLibreMap? = null
     private var fusedLocationClient: FusedLocationProviderClient? = null
 
-    fun initialize(applicationContext: Context) { // Accept ApplicationContext
+    fun initialize(applicationContext: Context) {
         this.appContext = applicationContext
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(applicationContext)
+        initializeLocationEngine()
     }
 
     fun initializeMap(mapView: MapView, onMapReady: (MapLibreMap) -> Unit) {
@@ -45,12 +55,13 @@ object MapManager {
                 Log.d("MapManager", "Map style loaded successfully")
                 enableUserLocation()
                 onMapReady(mapLibreMap)
+
             }
         }
     }
 
     private fun enableUserLocation() {
-        appContext?.let{
+        appContext?.let {
             if (map == null) return
 
             if (checkLocationPermissions()) {
@@ -60,9 +71,11 @@ object MapManager {
                         .useDefaultLocationEngine(true)
                         //right now using default location engine
                         //TODO create own location engine
-                        .locationEngineRequest(LocationEngineRequest.Builder(750).setFastestInterval(750).setPriority(
-                            LocationEngineRequest.PRIORITY_HIGH_ACCURACY).build())
-                        .build()
+                        .locationEngineRequest(
+                            LocationEngineRequest.Builder(750).setFastestInterval(750).setPriority(
+                                LocationEngineRequest.PRIORITY_HIGH_ACCURACY
+                            ).build()
+                        ).build()
                 )
                 locationComponent.isLocationComponentEnabled = true
                 locationComponent.cameraMode = CameraMode.TRACKING
@@ -74,52 +87,54 @@ object MapManager {
     }
 
     fun moveCamera(latLng: LatLng, zoom: Double) {
-        val cameraPosition = CameraPosition.Builder()
-            .target(latLng)
-            .zoom(zoom)
-            .build()
+        val cameraPosition = CameraPosition.Builder().target(latLng).zoom(zoom).build()
         //handles the camera movement animation to the desired coordinates
         map?.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition), 1000)
     }
 
     private fun checkLocationPermissions(): Boolean {
-        return appContext?.let{
+        return appContext?.let {
             ActivityCompat.checkSelfPermission(
-                it,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                it, Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
-        }?:false
+        } ?: false
     }
 
     private fun requestLocationPermissions() {
-        appContext?.let{
+        appContext?.let {
             ActivityCompat.requestPermissions(
-                (it as Activity),
-                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                1001
+                (it as Activity), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1001
             )
         }
     }
+
     fun initializeLocationEngine() {
-        appContext?.let{
+        appContext?.let {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(it)
         }
         requestLocationUpdates()
     }
 
     fun goToUserLocation() {
-        appContext?.let{
-            if (ActivityCompat.checkSelfPermission(it, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                fusedLocationClient?.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null)
-                    ?.addOnSuccessListener { location ->
+        appContext?.let {
+            if (ActivityCompat.checkSelfPermission(
+                    it, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                fusedLocationClient?.getCurrentLocation(
+                    com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null
+                )?.addOnSuccessListener { location ->
                         if (location != null) {
                             val latLng = LatLng(location.latitude, location.longitude)
                             moveCamera(latLng, 18.0)
                         } else {
-                            Toast.makeText(it, "Unable to get current location.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                it, "Unable to get current location.", Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }?.addOnFailureListener {
-                        Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT)
+                            .show()
                     }
             } else {
                 requestLocationPermissions()
@@ -127,13 +142,40 @@ object MapManager {
         }
     }
 
+    fun getUserLocation(onLocationReceived: (LatLng) -> Unit) {
+        appContext?.let {
+            if (ActivityCompat.checkSelfPermission(
+                    it, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                fusedLocationClient?.getCurrentLocation(
+                    com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null
+                )?.addOnSuccessListener { location ->
+                        if (location != null) {
+                            val latLng = LatLng(location.latitude, location.longitude)
+                            onLocationReceived(latLng)
+                        } else {
+                            Toast.makeText(
+                                it, "Unable to get current location.", Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }?.addOnFailureListener {
+                        Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT)
+                            .show()
+                    }
+            } else {
+                requestLocationPermissions()
+            }
+        }
+    }
+
+
     //if time I will implement my own location engine for location updates
     fun requestLocationUpdates() {
         if (checkLocationPermissions()) {
             try {
                 val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
-                    com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
-                    5000
+                    com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, 5000
                 ).apply {
                     setMinUpdateIntervalMillis(2000)
                     setWaitForAccurateLocation(true)
@@ -143,7 +185,7 @@ object MapManager {
                     override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
                         locationResult.lastLocation?.let { location ->
                             val latLng = LatLng(location.latitude, location.longitude)
-                            moveCamera(latLng, 18.0)
+//                            moveCamera(latLng, 18.0)
                         }
                     }
                 }
@@ -160,6 +202,51 @@ object MapManager {
     fun resetCompass() {
         map?.animateCamera(CameraUpdateFactory.bearingTo(0.0))
     }
+
+
+    fun addRedMarker(latLng: LatLng) {
+        map?.let { mapLibreMap ->
+            mapLibreMap.getStyle { style ->
+                if (style.isFullyLoaded) { // this is used to ensure style is fully loaded before modifying
+                    val sourceId = "marker-source"
+                    val layerId = "marker-layer"
+
+                    // removing existing source and layer if they exist
+                    style.getLayer(layerId)?.let { style.removeLayer(it) }
+                    style.getSource(sourceId)?.let { style.removeSource(it) }
+
+                    //adding the red marker image after checking
+                    if (style.getImage("red_marker_svg") == null) {
+                        style.addImage(
+                            "red_marker_svg", BitmapFactory.decodeResource(
+                                appContext?.resources, R.drawable.red_marker
+                            )
+                        )
+                    }
+
+                    // Create a new marker feature
+                    val point = Point.fromLngLat(latLng.longitude, latLng.latitude)
+                    val feature = Feature.fromGeometry(point)
+                    val featureCollection = FeatureCollection.fromFeatures(arrayOf(feature))
+
+                    val source = GeoJsonSource(sourceId, featureCollection)
+                    style.addSource(source)
+
+                    val symbolLayer = SymbolLayer(layerId, sourceId).withProperties(
+                            iconImage("red_marker_svg"),
+                            iconAllowOverlap(true),
+                            iconIgnorePlacement(true),
+                            iconSize(1.0f)
+                        )
+                    style.addLayer(symbolLayer)
+
+                    // Move camera
+                    moveCamera(latLng, 15.0)
+                }
+            }
+        }
+    }
+
 
     fun onDestroy() {
         try {

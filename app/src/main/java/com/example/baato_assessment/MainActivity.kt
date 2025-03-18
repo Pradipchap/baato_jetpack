@@ -8,18 +8,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.viewinterop.AndroidView
 import com.example.baato_assessment.ui.theme.BaatoassessmentTheme
+import com.example.baato_assessment.viewModel.DeepLinkHandler
 import com.example.baato_assessment.viewModel.MapManager
 import com.example.baato_assessment.views.MapScreen
 import org.maplibre.android.MapLibre
 import org.maplibre.android.WellKnownTileServer
-import org.maplibre.android.geometry.LatLng
-import org.maplibre.android.maps.MapView
 
 class MainActivity : ComponentActivity() {
 
@@ -28,8 +23,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // initializing the MapLibre before using MapView
-        MapLibre.getInstance(this, "bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ",
-            WellKnownTileServer.MapLibre)
+        MapLibre.getInstance(
+            this, "bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ",
+            WellKnownTileServer.MapLibre
+        )
 
         MapManager.initialize(this)
 
@@ -37,7 +34,11 @@ class MainActivity : ComponentActivity() {
             setContent {
                 BaatoassessmentTheme {
                     Scaffold(modifier = Modifier.fillMaxSize()) {
-                        MapScreen()
+                        MapScreen(onMapReady = { mapLibreMap ->
+                            DeepLinkHandler.handleDeepLink(intent)
+                            DeepLinkHandler.handleDeepLink(intent)
+                        }
+                        )
                     }
                 }
             }

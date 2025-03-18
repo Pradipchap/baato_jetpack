@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.baato_assessment"
+    namespace = "com.pradipchapagain.baato_assessment"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.baato_assessment"
+        applicationId = "com.pradipchapagain.baato_assessment"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
