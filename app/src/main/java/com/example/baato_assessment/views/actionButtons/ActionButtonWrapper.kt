@@ -36,14 +36,14 @@ fun FloatingActionButton(
                 Image(
                     imageVector = icon,
                     contentDescription = contentDescription,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(30.dp)
                 )
             }
             is Int -> {
                 Image(
                     painter = painterResource(id = icon),
                     contentDescription = contentDescription,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(30.dp)
                 )
             }
             else -> {

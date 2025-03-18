@@ -13,8 +13,8 @@ fun FloatingButtons(
 ) {
 
     Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomEnd
+        modifier = Modifier.fillMaxSize().padding(vertical = 50.dp),
+        contentAlignment = Alignment.BottomEnd,
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

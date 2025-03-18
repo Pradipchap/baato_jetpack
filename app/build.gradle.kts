@@ -16,6 +16,12 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        val apiKey = properties.get("BAATO_API_KEY") ?: ""
+        buildConfigField(
+            type = "String",
+            name = "BAATO_API_KEY",
+            value = apiKey as String
+        )
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -38,6 +44,7 @@ android {
     buildFeatures {
         compose = true
         viewBinding = true
+        buildConfig=true
     }
 }
 

@@ -1,9 +1,11 @@
 package com.example.baato_assessment.views.actionButtons
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.pradipchapagain.baato_assessment.R
 import com.example.baato_assessment.viewModel.CompassManager
 import com.example.baato_assessment.viewModel.MapManager

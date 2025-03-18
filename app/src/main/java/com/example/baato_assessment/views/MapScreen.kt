@@ -5,9 +5,7 @@ import android.widget.FrameLayout
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.baato_assessment.viewModel.DeepLinkHandler
 import com.example.baato_assessment.viewModel.MapManager
 import com.example.baato_assessment.views.actionButtons.FloatingButtons
 import com.example.baato_assessment.views.popups.CategorySelectorPreview

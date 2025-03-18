@@ -1,12 +1,9 @@
 package com.example.baato_assessment.views.actionButtons
 
 import android.content.Intent
-import android.graphics.Color
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.pradipchapagain.baato_assessment.R
 import com.example.baato_assessment.viewModel.MapManager
@@ -45,6 +42,5 @@ fun ShareLocationButton() {
     FloatingActionButton(
         icon = R.drawable.share,
         onClick = { shareLocation() },
-        containerColor = MaterialTheme.colorScheme.background
     )
 }

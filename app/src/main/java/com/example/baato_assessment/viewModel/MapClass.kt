@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.Gravity
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.example.baato_assessment.api.BAATO_API_KEY
 import com.example.baato_assessment.api.NearbyPlace
 import com.example.baato_assessment.api.getNearbyPlaces
 import com.example.baato_assessment.utils.calculateRadius
@@ -60,7 +61,7 @@ object MapManager {
             mapLibreMap.uiSettings.isCompassEnabled = false
             mapLibreMap.uiSettings.setCompassFadeFacingNorth(false)
             mapLibreMap.uiSettings.compassGravity = Gravity.START
-            mapLibreMap.setStyle("https://api.baato.io/api/v1/styles/breeze_cdn?key=bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ") {
+            mapLibreMap.setStyle("https://api.baato.io/api/v1/styles/breeze_cdn?key=$BAATO_API_KEY") {
                 Log.d("MapManager", "Map style loaded successfully")
                 enableUserLocation()
                 onMapReady(mapLibreMap)

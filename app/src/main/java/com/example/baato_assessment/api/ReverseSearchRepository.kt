@@ -10,7 +10,7 @@ suspend fun reverseSearchRepository(
 ): ReverseSearchResponse {
     return withContext(Dispatchers.IO) {
         val queryParams = mutableMapOf<String, String>()
-        queryParams["key"] = "bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ"
+        queryParams["key"] = BAATO_API_KEY
         queryParams["lat"] = lat.toString()
         queryParams["lon"] = lon.toString()
 
