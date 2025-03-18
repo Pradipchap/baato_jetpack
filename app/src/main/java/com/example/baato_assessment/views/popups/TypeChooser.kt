@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.example.baato_assessment.api.Category
 import com.example.baato_assessment.viewModel.MapManager
+import com.example.baato_assessment.viewModel.MapManager.fetchPlacesInCurrentViewport
 
 @Composable
 fun CategorySelector(
@@ -58,13 +59,25 @@ fun CategorySelectorPreview() {
     )
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
+
+    LaunchedEffect(selectedCategory) {
+        if (selectedCategory != null && MapManager.map != null) {
+            MapManager?.map?.addOnCameraIdleListener {
+
+                if (selectedCategory != null) {
+                    fetchPlacesInCurrentViewport(selectedCategory ?: "")
+                }
+            }
+        }
+    }
+
     fun onCategorySelected(category: String) {
         if (selectedCategory == category) {
             selectedCategory = null
             MapManager.clearMapFeatures()
         } else {
             selectedCategory = category
-            MapManager.fetchPlacesInCurrentViewport(category)
+            fetchPlacesInCurrentViewport(category)
         }
     }
     Box(

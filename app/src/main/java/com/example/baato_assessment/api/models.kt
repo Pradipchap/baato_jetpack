@@ -32,3 +32,25 @@ data class Geometry(
 )
 
 data class Category(val label: String, val value: String)
+
+
+data class ReverseSearchResponse(
+    val timestamp: String,
+    val status: Int,
+    val message: String,
+    val data: List<ReverseSearchData>
+)
+
+data class ReverseSearchData(
+    val placeId: Int,
+    val license: String?,
+    val name: String,
+    val address: String,
+    val type: String,
+    val centroid: Centroid,
+    val tags: List<String>?,
+    val geometry: Geometry?,
+    val score: String?
+)
+
+

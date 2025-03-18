@@ -44,7 +44,7 @@ object MapManager {
 
     private var appContext: Context? = null
     private var mapView: MapView? = null
-    private var map: MapLibreMap? = null
+    var map: MapLibreMap? = null
     private var fusedLocationClient: FusedLocationProviderClient? = null
 
     fun initialize(applicationContext: Context) {
@@ -64,10 +64,6 @@ object MapManager {
                 Log.d("MapManager", "Map style loaded successfully")
                 enableUserLocation()
                 onMapReady(mapLibreMap)
-                //right now not using this functionality
-//                mapLibreMap.addOnCameraIdleListener {
-//                    fetchPlacesInCurrentViewport() // Automatic triggering
-//                }
 
             }
         }
@@ -146,8 +142,7 @@ object MapManager {
                         ).show()
                     }
                 }?.addOnFailureListener {
-                    Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 requestLocationPermissions()
@@ -173,8 +168,7 @@ object MapManager {
                         ).show()
                     }
                 }?.addOnFailureListener {
-                    Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT).show()
                 }
             } else {
                 requestLocationPermissions()
@@ -278,8 +272,7 @@ object MapManager {
 
                     places.data.forEach { place ->
                         addMarker(
-                            LatLng(place.centroid.lat, place.centroid.lon),
-                            place
+                            LatLng(place.centroid.lat, place.centroid.lon), place
                         )
                         handleGeometry(place.geometry, mapLibreMap)
                     }
@@ -348,11 +341,27 @@ object MapManager {
                             iconImage("red_marker_svg"),
                             iconAllowOverlap(true),
                             iconIgnorePlacement(true),
-                            iconSize(0.2f),
+                            iconSize(0.3f),
+
+                            // Add text label (place name)
+                            textSize(12f),
+                            textOffset(arrayOf(0f, 2.0f)), // Adjust text above marker
+                            textAllowOverlap(true),
+                            textIgnorePlacement(true)
+
                         )
 
                         style.addLayer(layer)
                         Log.d("MapMarker", "Layer added: $layerId")
+                    }
+                    mapLibreMap.addOnMapClickListener { latLng ->
+                        if (latLng.distanceTo(location) < 100) {  // Adjust threshold as needed
+                            PlaceShowManager().setSelectedPlace(place)
+                            Log.d("MapMarker", "Marker clicked: ${place.name}")
+                            true
+                        } else {
+                            false
+                        }
                     }
 
                 }

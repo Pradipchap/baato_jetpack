@@ -9,4 +9,9 @@ interface BaatoAPI {
     suspend fun getNearbyPlaces(
         @QueryMap parameters: Map<String, String>
     ): Response<NearbyPlacesResponse>
+
+    @GET("reverse")
+    suspend fun getReverseSearch(
+        @QueryMap parameters: Map<String, String>
+    ): Response<ReverseSearchResponse>
 }

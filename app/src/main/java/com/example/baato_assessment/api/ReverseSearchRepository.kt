@@ -1,26 +1,21 @@
 package com.example.baato_assessment.api
 
+
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-suspend fun getNearbyPlaces(
+suspend fun reverseSearchRepository(
     lat: Double,
     lon: Double,
-    type: String? = null,
-    radius: Int? = null,
-    limit: Int? = null,
-    sortBy: Boolean? = null,
-    isOpen: Boolean? = null
-): NearbyPlacesResponse {
+): ReverseSearchResponse {
     return withContext(Dispatchers.IO) {
         val queryParams = mutableMapOf<String, String>()
         queryParams["key"] = "bpk.YRfF8dHCw5QDEJUD3mOy-I3SdH52xqiD-BMG0iq3FgAZ"
         queryParams["lat"] = lat.toString()
         queryParams["lon"] = lon.toString()
-        type?.let { queryParams["type"] = it }
 
 
-        val response = ApiClient.baatoAPI.getNearbyPlaces(queryParams)
+        val response = ApiClient.baatoAPI.getReverseSearch(queryParams)
         if (response.isSuccessful) {
             response.body() ?: throw Exception("Null response body")
         } else {

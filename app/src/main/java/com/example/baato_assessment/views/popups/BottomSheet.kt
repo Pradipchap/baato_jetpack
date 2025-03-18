@@ -1,8 +1,11 @@
 package com.example.baato_assessment.views.popups
 
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.example.baato_assessment.viewModel.BottomSheetManager
 import kotlinx.coroutines.launch
 
@@ -29,7 +32,7 @@ fun CustomBottomSheet() {
         ModalBottomSheet(
             onDismissRequest = { BottomSheetManager.hideSheet() },
             sheetState = sheetState,
-            content = sheetContent!!
+            content = sheetContent!!,
         )
     }
 }
