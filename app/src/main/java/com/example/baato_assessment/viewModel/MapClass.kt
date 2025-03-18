@@ -10,6 +10,10 @@ import android.util.Log
 import android.view.Gravity
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.example.baato_assessment.api.NearbyPlace
+import com.example.baato_assessment.api.getNearbyPlaces
+import com.example.baato_assessment.utils.calculateRadius
+import com.example.baato_assessment.utils.handleGeometry
 import com.google.android.gms.location.FusedLocationProviderClient
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -28,6 +32,11 @@ import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.Point
 import org.maplibre.android.style.layers.PropertyFactory.*
 import com.pradipchapagain.baato_assessment.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
 
 
 //use this class to manage map from anywhere in the app
@@ -55,6 +64,10 @@ object MapManager {
                 Log.d("MapManager", "Map style loaded successfully")
                 enableUserLocation()
                 onMapReady(mapLibreMap)
+                //right now not using this functionality
+//                mapLibreMap.addOnCameraIdleListener {
+//                    fetchPlacesInCurrentViewport() // Automatic triggering
+//                }
 
             }
         }
@@ -124,18 +137,18 @@ object MapManager {
                 fusedLocationClient?.getCurrentLocation(
                     com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null
                 )?.addOnSuccessListener { location ->
-                        if (location != null) {
-                            val latLng = LatLng(location.latitude, location.longitude)
-                            moveCamera(latLng, 18.0)
-                        } else {
-                            Toast.makeText(
-                                it, "Unable to get current location.", Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }?.addOnFailureListener {
-                        Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT)
-                            .show()
+                    if (location != null) {
+                        val latLng = LatLng(location.latitude, location.longitude)
+                        moveCamera(latLng, 18.0)
+                    } else {
+                        Toast.makeText(
+                            it, "Unable to get current location.", Toast.LENGTH_SHORT
+                        ).show()
                     }
+                }?.addOnFailureListener {
+                    Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT)
+                        .show()
+                }
             } else {
                 requestLocationPermissions()
             }
@@ -151,18 +164,18 @@ object MapManager {
                 fusedLocationClient?.getCurrentLocation(
                     com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null
                 )?.addOnSuccessListener { location ->
-                        if (location != null) {
-                            val latLng = LatLng(location.latitude, location.longitude)
-                            onLocationReceived(latLng)
-                        } else {
-                            Toast.makeText(
-                                it, "Unable to get current location.", Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }?.addOnFailureListener {
-                        Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT)
-                            .show()
+                    if (location != null) {
+                        val latLng = LatLng(location.latitude, location.longitude)
+                        onLocationReceived(latLng)
+                    } else {
+                        Toast.makeText(
+                            it, "Unable to get current location.", Toast.LENGTH_SHORT
+                        ).show()
                     }
+                }?.addOnFailureListener {
+                    Toast.makeText(appContext, "Failed to get location.", Toast.LENGTH_SHORT)
+                        .show()
+                }
             } else {
                 requestLocationPermissions()
             }
@@ -210,7 +223,6 @@ object MapManager {
                 if (style.isFullyLoaded) { // this is used to ensure style is fully loaded before modifying
                     val sourceId = "marker-source"
                     val layerId = "marker-layer"
-
                     // removing existing source and layer if they exist
                     style.getLayer(layerId)?.let { style.removeLayer(it) }
                     style.getSource(sourceId)?.let { style.removeSource(it) }
@@ -233,11 +245,11 @@ object MapManager {
                     style.addSource(source)
 
                     val symbolLayer = SymbolLayer(layerId, sourceId).withProperties(
-                            iconImage("red_marker_svg"),
-                            iconAllowOverlap(true),
-                            iconIgnorePlacement(true),
-                            iconSize(1.0f)
-                        )
+                        iconImage("red_marker_svg"),
+                        iconAllowOverlap(true),
+                        iconIgnorePlacement(true),
+                        iconSize(1.0f)
+                    )
                     style.addLayer(symbolLayer)
 
                     // Move camera
@@ -247,6 +259,120 @@ object MapManager {
         }
     }
 
+    fun fetchPlacesInCurrentViewport() {
+        map?.let { mapLibreMap ->
+            val visibleRegion = mapLibreMap.projection.visibleRegion
+            val latLngBounds = visibleRegion.latLngBounds
+
+            val southWest = latLngBounds.southWest
+            val northEast = latLngBounds.northEast
+
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    val places = getNearbyPlaces(
+                        lat = (southWest.latitude + northEast.latitude) / 2,
+                        lon = (southWest.longitude + northEast.longitude) / 2,
+                        radius = calculateRadius(southWest, northEast)
+                    )
+
+                    places.data.forEach { place ->
+                        addMarker(
+                            LatLng(place.centroid.lat, place.centroid.lon),
+                            place
+                        )
+                        handleGeometry(place.geometry, mapLibreMap)
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(appContext, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    fun addMarker(location: LatLng, place: NearbyPlace) {
+        map?.let { mapLibreMap ->
+            mapLibreMap.getStyle { style ->
+                if (style.isFullyLoaded) {
+                    Log.d(
+                        "MapMarker",
+                        "Adding marker for ${place.name} at ${location.latitude}, ${location.longitude}"
+                    )
+
+                    // ensure marker image is added once
+                    if (style.getImage("red_marker_svg") == null) {
+                        appContext?.resources?.let { res ->
+                            val bitmap = BitmapFactory.decodeResource(res, R.drawable.red_marker)
+                            if (bitmap != null) {
+                                style.addImage("red_marker_svg", bitmap)
+                                Log.d("MapMarker", "Marker image added successfully!")
+                            } else {
+                                Log.e("MapMarker", "Failed to load marker image!")
+                            }
+                        }
+                    }
+
+                    val sourceId = "source-${location.latitude}-${location.longitude}"
+                    val layerId = "layer-${location.latitude}-${location.longitude}"
+
+                    val point = JSONObject().apply {
+                        put("type", "Point")
+                        put("coordinates", JSONArray().apply {
+                            put(location.longitude)
+                            put(location.latitude)
+                        })
+                    }
+
+                    val featureCollection = JSONObject().apply {
+                        put("type", "FeatureCollection")
+                        put("features", JSONArray().apply {
+                            put(JSONObject().apply {
+                                put("type", "Feature")
+                                put("geometry", point)
+                                put("properties", JSONObject().apply {
+                                    put("title", place.name)
+                                })
+                            })
+                        })
+                    }
+
+                    if (style.getSource(sourceId) == null) {
+                        val source = GeoJsonSource(sourceId, featureCollection.toString())
+                        style.addSource(source)
+                        Log.d("MapMarker", "Source added: $sourceId")
+                    }
+
+                    if (style.getLayer(layerId) == null) {
+                        val layer = SymbolLayer(layerId, sourceId).withProperties(
+                            iconImage("red_marker_svg"),
+                            iconAllowOverlap(true),
+                            iconIgnorePlacement(true),
+                            iconSize(0.2f),
+                        )
+
+                        style.addLayer(layer)
+                        Log.d("MapMarker", "Layer added: $layerId")
+                    }
+
+                }
+            }
+        }
+    }
+
+    private fun clearMapFeatures() {
+        map?.let { mapLibreMap ->
+            mapLibreMap.getStyle()?.sources?.forEach { source ->
+                if (source.id.startsWith("source-") || source.id.startsWith("polygon-source-")) {
+                    mapLibreMap.getStyle()?.removeSource(source.id)
+                }
+            }
+            mapLibreMap.getStyle()?.layers?.forEach { layer ->
+                if (layer.id.startsWith("layer-") || layer.id.startsWith("polygon-layer-")) {
+                    mapLibreMap.getStyle()?.removeLayer(layer.id)
+                }
+            }
+        }
+    }
 
     fun onDestroy() {
         try {
